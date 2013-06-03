@@ -53,6 +53,7 @@ int main(int argc, char *argv[]) {
 	while (1) {
 		int cont = 0;
 		printf("Enter Expression: ");
+		//flush input
 		fflush(stdout);
 		fgets(inputExpr, 255, stdin);
 		if (isdigit(inputExpr[0])) {
@@ -78,6 +79,7 @@ int main(int argc, char *argv[]) {
 		else if (operation == '%')
 			request.procedureId = htonl(REM_OP);
 
+		//if there are more operations
 		if (cont) {
 			request.procedureId |= htonl(CONT_OP);
 		}
