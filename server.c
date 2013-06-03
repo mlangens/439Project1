@@ -119,7 +119,6 @@ int main(int argc, char **argv) {
 		reply.arg2 = htonl(status);
 
 		printf("Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
-		printf("Handling request %s\n", inet_ntoa(request.RPCId));
 
 		/* Send received datagram back to the client */
 		if (sendto(sock, &reply, sizeof(reply), 0,
