@@ -21,8 +21,10 @@ int main(int argc, char *argv[]) {
 	int echoStringLen; /* Length of string to echo */
 	int respStringLen; /* Length of received response */
 	int rpcid = 0;
-	int num1, num2; //operands
-	char operation; //char for operator
+	int operand1;
+	int operand2;
+	char operation;
+	char inputExpr[255];
 
 	if ((argc < 2) || (argc > 3)) /* Test for correct number of arguments */
 	{
@@ -49,31 +51,36 @@ int main(int argc, char *argv[]) {
 	echoServAddr.sin_port = htons(echoServPort); /* Server port */
 
 	while (1) {
-		printf("Enter first number:"); /*Ask user for 1st number*/
+		int cont = 0;
+		printf("Enter Expression: ");
 		fflush(stdout);
-		scanf("%d", &num1); /*Read 1st number*/
-		printf("Enter operation: "); /*Ask user for operation*/
-		fflush(stdout);
-		scanf("%c", &operation); /*Read operation*/
-		printf("Enter second number:"); /*Ask user for 2nd number*/
-		fflush(stdout);
-		scanf("%d", &num2); /*Read 2nd number*/
+		fgets(inputExpr, 255, stdin);
+		if (isdigit(inputExpr[0])) {
+			sscanf(inputExpr, "%d %c %d", &operand1, &operation, &operand2);
+		} else {
+			sscanf(inputExpr, "%c %d", &operation, &operand2);
+			cont = 1;
+		}
 
 		//set request object
 		request.messageType = htonl(Request);
 		request.RPCId = htonl(rpcid++);
-		request.arg1 = htonl(num1);
-		request.arg2 = htonl(num2);
+		request.arg1 = htonl(operand1);
+		request.arg2 = htonl(operand2);
 		if (operation == '+')
 			request.procedureId = htonl(ADD_OP);
-		if (operation == '-')
+		else if (operation == '-')
 			request.procedureId = htonl(SUB_OP);
-		if (operation == '*')
+		else if (operation == '*')
 			request.procedureId = htonl(MULT_OP);
-		if (operation == '/')
+		else if (operation == '/')
 			request.procedureId = htonl(DIV_OP);
-		if (operation == '%')
+		else if (operation == '%')
 			request.procedureId = htonl(REM_OP);
+
+		if (cont) {
+			request.procedureId |= htonl(CONT_OP);
+		}
 
 		/* Send the string to the server */
 		if (sendto(sock, &request, sizeof(request), 0,
