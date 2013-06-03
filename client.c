@@ -50,10 +50,13 @@ int main(int argc, char *argv[]) {
 
 	while (1) {
 		printf("Enter first number:"); /*Ask user for 1st number*/
+		fflush(stdout);
 		scanf("%d", &num1); /*Read 1st number*/
 		printf("Enter operation: "); /*Ask user for operation*/
+		fflush(stdout);
 		scanf("%c", &operation); /*Read operation*/
 		printf("Enter second number:"); /*Ask user for 2nd number*/
+		fflush(stdout);
 		scanf("%d", &num2); /*Read 2nd number*/
 
 		//set request object
