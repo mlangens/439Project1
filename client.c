@@ -21,6 +21,9 @@ int main(int argc, char *argv[]) {
 	int echoStringLen; /* Length of string to echo */
 	int respStringLen; /* Length of received response */
 	int rpcid = 0;
+	int operand1;
+	int operand2;
+	char operator;
 	char inputExpr[255];
 
 	if ((argc < 2) || (argc > 3)) /* Test for correct number of arguments */
@@ -49,13 +52,24 @@ int main(int argc, char *argv[]) {
 
 	while (1) {
 		printf("Enter Expression: ");
-		fgets(inputExpr, 255, stdout);
-		//parsing
+		scanf("%d %s %d", &operand1, &operator, &operand2);
+		//fgets(inputExpr, 255, stdout);
+
+		//set request object
 		request.messageType = htonl(Request);
 		request.RPCId = htonl(rpcid++);
-		request.arg1 = htonl(3);
-		request.arg2 = htonl(2);
-		request.procedureId = htonl(ADD_OP);
+		request.arg1 = htonl(operand1);
+		request.arg2 = htonl(operand2);
+		if (operator == "+")
+			request.procedureId = htonl(ADD_OP);
+		if (operator == "-")
+			request.procedureId = htonl(SUB_OP);
+		if (operator == "*")
+			request.procedureId = htonl(MULT_OP);
+		if (operator == "/")
+			request.procedureId = htonl(DIV_OP);
+		if (operator == "%")
+			request.procedureId = htonl(REM_OP);
 
 		/* Send the string to the server */
 		if (sendto(sock, &request, sizeof(request), 0,
