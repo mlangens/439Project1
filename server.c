@@ -43,6 +43,61 @@ int rem(int x, int y, int *z) {
 	}
 }
 
+int processOperation(int lastResult, RPCMessage* request, int* status) {
+	//check for request type
+	if (request.messageType == Request) {
+		//bit and 0x80 for continuation
+		if (request.procedureId & CONT_OP)
+			request.arg1 = lastResult;
+		if (request.procedureId & ADD_OP)
+			status = add(request.arg1, request.arg2, &lastResult);
+		if (request.procedureId & SUB_OP)
+			status = subtract(request.arg1, request.arg2, &lastResult);
+		if (request.procedureId & MULT_OP)
+			status = multiply(request.arg1, request.arg2, &lastResult);
+		if (request.procedureId & DIV_OP)
+			status = divide(request.arg1, request.arg2, &lastResult);
+		if (request.procedureId & REM_OP)
+			status = rem(request.arg1, request.arg2, &lastResult);
+	}
+	return lastResult;
+}
+
+void processNetworkByteOrder(RPCMessage* request) {
+	//re-storing from network byte order to byte order
+	request.RPCId = ntohl(request.RPCId);
+	request.messageType = ntohl(request.messageType);
+	request.procedureId = ntohl(request.procedureId);
+	request.arg1 = ntohl(request.arg1);
+	request.arg2 = ntohl(request.arg2);
+}
+
+void populateReply(const RPCMessage* request, int lastResult, int status, RPCMessage* reply) {
+	//populate reply, don't need to populate procedureId
+	memset(&reply, 0, sizeof(reply));
+	reply.RPCId = htonl(request.RPCId);
+	reply.messageType = htonl(Reply);
+	reply.arg1 = htonl(lastResult);
+	reply.arg2 = htonl(status);
+}
+
+void sendDataToClient(int sock, const RPCMessage* reply, const struct sockaddr_in* echoClntAddr, int recvMsgSize) {
+	/* Send received datagram back to the client */
+	if (sendto(sock, &*reply, sizeof(*reply), 0, (struct sockaddr*) &*echoClntAddr, sizeof(*echoClntAddr))
+			!= recvMsgSize)
+		DieWithError("sendto() sent a different number of bytes than expected");
+}
+
+int blockUntilMsgRecv(int recvMsgSize, int sock, unsigned int cliAddrLen, RPCMessage* request,
+		struct sockaddr_in* echoClntAddr) {
+	/* Block until receive message from a client */
+	if ((recvMsgSize = recvfrom(sock, &*request, sizeof(*request), 0, (struct sockaddr*) &*echoClntAddr, &cliAddrLen))
+			< 0)
+		DieWithError("recvfrom() failed");
+
+	return recvMsgSize;
+}
+
 int main(int argc, char **argv) {
 	int sock; /* Socket */
 	struct sockaddr_in echoServAddr; /* Local address */
@@ -77,55 +132,24 @@ int main(int argc, char **argv) {
 	if (bind(sock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)
 		DieWithError("bind() failed");
 
-	for (;;) /* Run forever */
-	{
+	for (;;) { /* Run forever */
 		/* Set the size of the in-out parameter */
 		cliAddrLen = sizeof(echoClntAddr);
 
 		/* Block until receive message from a client */
-		if ((recvMsgSize = recvfrom(sock, &request, sizeof(request), 0,
-				(struct sockaddr *) &echoClntAddr, &cliAddrLen)) < 0)
-			DieWithError("recvfrom() failed");
+		recvMsgSize = blockUntilMsgRecv(recvMsgSize, sock, cliAddrLen, &request, &echoClntAddr);
 
 		//re-storing from network byte order to byte order
-		request.RPCId = ntohl(request.RPCId);
-		request.messageType = ntohl(request.messageType);
-		request.procedureId = ntohl(request.procedureId);
-		request.arg1 = ntohl(request.arg1);
-		request.arg2 = ntohl(request.arg2);
-
+		processNetworkByteOrder(&request);
 		//check for request type
-		if (request.messageType == Request) {
-			//bit and 0x80 for continuation
-			if (request.procedureId & CONT_OP)
-				request.arg1 = lastResult;
-			if (request.procedureId & ADD_OP)
-				status = add(request.arg1, request.arg2, &lastResult);
-			if (request.procedureId & SUB_OP)
-				status = subtract(request.arg1, request.arg2, &lastResult);
-			if (request.procedureId & MULT_OP)
-				status = multiply(request.arg1, request.arg2, &lastResult);
-			if (request.procedureId & DIV_OP)
-				status = divide(request.arg1, request.arg2, &lastResult);
-			if (request.procedureId & REM_OP)
-				status = rem(request.arg1, request.arg2, &lastResult);
-		}
+		lastResult = processOperation(lastResult, &request, &status);
 
 		//populate reply, don't need to populate procedureId
-		memset(&reply, 0, sizeof(reply));
-		reply.RPCId = htonl(request.RPCId);
-		reply.messageType = htonl(Reply);
-		reply.arg1 = htonl(lastResult);
-		reply.arg2 = htonl(status);
-
+		populateReply(&request, lastResult, status, &reply);
 		printf("Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
 
 		/* Send received datagram back to the client */
-		if (sendto(sock, &reply, sizeof(reply), 0,
-				(struct sockaddr *) &echoClntAddr, sizeof(echoClntAddr))
-				!= recvMsgSize)
-			DieWithError(
-					"sendto() sent a different number of bytes than expected");
+		sendDataToClient(sock, &reply, &echoClntAddr, recvMsgSize);
 	}
 	/* NOT REACHED */
 }
