@@ -66,19 +66,19 @@ int processOperation(int lastResult, RPCMessage* request, int* status) {
 void processNetworkByteOrder(RPCMessage* request) {
 	//re-storing from network byte order to byte order
 	request.RPCId = ntohl(request.RPCId);
-	request.messageType = ntohl(request.messageType);
-	request.procedureId = ntohl(request.procedureId);
-	request.arg1 = ntohl(request.arg1);
-	request.arg2 = ntohl(request.arg2);
+	request->messageType = ntohl(request->messageType);
+	request->procedureId = ntohl(request->procedureId);
+	request->arg1 = ntohl(request->arg1);
+	request->arg2 = ntohl(request->arg2);
 }
 
 void populateReply(const RPCMessage* request, int lastResult, int status, RPCMessage* reply) {
 	//populate reply, don't need to populate procedureId
 	memset(&reply, 0, sizeof(reply));
-	reply.RPCId = htonl(request.RPCId);
-	reply.messageType = htonl(Reply);
-	reply.arg1 = htonl(lastResult);
-	reply.arg2 = htonl(status);
+	reply->RPCId = htonl(request->RPCId);
+	reply->messageType = htonl(Reply);
+	reply->arg1 = htonl(lastResult);
+	reply->arg2 = htonl(status);
 }
 
 void sendDataToClient(int sock, const RPCMessage* reply, const struct sockaddr_in* echoClntAddr, int recvMsgSize) {
