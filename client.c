@@ -12,46 +12,46 @@ void DieWithError(char *errorMessage); /* External error handling function */
 
 void chooseOperator(char operation, RPCMessage* request) {
 	if (operation == '+')
-		request.procedureId = htonl(ADD_OP);
+		request->procedureId = htonl(ADD_OP);
 	else if (operation == '-')
-		request.procedureId = htonl(SUB_OP);
+		request->procedureId = htonl(SUB_OP);
 	else if (operation == '*')
-		request.procedureId = htonl(MULT_OP);
+		request->procedureId = htonl(MULT_OP);
 	else if (operation == '/')
-		request.procedureId = htonl(DIV_OP);
+		request->procedureId = htonl(DIV_OP);
 	else if (operation == '%')
-		request.procedureId = htonl(REM_OP);
+		request->procedureId = htonl(REM_OP);
 }
 
 int setRequest(int rpcid, int operand1, int operand2, RPCMessage* request) {
 	//set request object
-	request.messageType = htonl(Request);
-	request.RPCId = htonl(rpcid++);
-	request.arg1 = htonl(operand1);
-	request.arg2 = htonl(operand2);
+	request->messageType = htonl(Request);
+	request->RPCId = htonl(rpcid++);
+	request->arg1 = htonl(operand1);
+	request->arg2 = htonl(operand2);
 	return rpcid;
 }
 
 void processNetworkByteOrder(RPCMessage* reply) {
 	//re-storing from network byte order to byte order
-	reply.RPCId = ntohl(reply.RPCId);
-	reply.messageType = ntohl(reply.messageType);
-	reply.procedureId = ntohl(reply.procedureId);
-	reply.arg1 = ntohl(reply.arg1);
-	reply.arg2 = ntohl(reply.arg2);
+	reply->RPCId = ntohl(reply->RPCId);
+	reply->messageType = ntohl(reply->messageType);
+	reply->procedureId = ntohl(reply->procedureId);
+	reply->arg1 = ntohl(reply->arg1);
+	reply->arg2 = ntohl(reply->arg2);
 }
 
 void handleErrors(const RPCMessage* request, const struct sockaddr_in* echoServAddr, const struct sockaddr_in* fromAddr,
 		RPCMessage* reply) {
-	if (ntohl(request.RPCId) != reply.RPCId) {
-		fprintf(stdout, "RPCid mismatch %d != %d\n", ntohl(request.RPCId), reply.RPCId);
+	if (ntohl(request->RPCId) != reply->RPCId) {
+		fprintf(stdout, "RPCid mismatch %d != %d\n", ntohl(request->RPCId), reply->RPCId);
 		exit(1);
 	}
-	if (reply.arg2 != OK) {
-		fprintf(stdout, "Illegal op %d\n", reply.arg2);
+	if (reply->arg2 != OK) {
+		fprintf(stdout, "Illegal op %d\n", reply->arg2);
 		exit(1);
 	}
-	if (echoServAddr.sin_addr.s_addr != fromAddr.sin_addr.s_addr) {
+	if (echoServAddr->sin_addr.s_addr != fromAddr->sin_addr.s_addr) {
 		fprintf(stderr, "Error: received a packet from unknown source.\n");
 		exit(1);
 	}
@@ -89,7 +89,7 @@ int processInput(char inputExpr[255], int* operand1, char* operation, int* opera
 	chooseOperator(*operation, &*request);
 	//if there are more operations
 	if (cont) {
-		request.procedureId |= htonl(CONT_OP);
+		request->procedureId |= htonl(CONT_OP);
 	}
 	return cont;
 }
