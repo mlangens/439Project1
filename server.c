@@ -98,6 +98,15 @@ int blockUntilMsgRecv(int recvMsgSize, int sock, unsigned int cliAddrLen, RPCMes
 	return recvMsgSize;
 }
 
+void localAddressInitBlock(unsigned short echoServPort, struct sockaddr_in* echoServAddr) {
+	/* Construct local address structure */
+	memset(&echoServAddr, 0, sizeof(echoServAddr));
+	/* Zero out structure */
+	echoServAddr->sin_family = AF_INET;
+	echoServAddr->sin_addr.s_addr = htonl(INADDR_ANY);
+	echoServAddr->sin_port = htons(echoServPort);
+}
+
 int main(int argc, char **argv) {
 	int sock; /* Socket */
 	struct sockaddr_in echoServAddr; /* Local address */
@@ -122,12 +131,7 @@ int main(int argc, char **argv) {
 		DieWithError("socket() failed");
 
 	/* Construct local address structure */
-	memset(&echoServAddr, 0, sizeof(echoServAddr));
-	/* Zero out structure */
-	echoServAddr.sin_family = AF_INET; /* Internet address family */
-	echoServAddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-	echoServAddr.sin_port = htons(echoServPort); /* Local port */
-
+	localAddressInitBlock(echoServPort, &echoServAddr);
 	/* Bind to the local address */
 	if (bind(sock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)
 		DieWithError("bind() failed");
