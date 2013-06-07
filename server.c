@@ -45,20 +45,20 @@ int rem(int x, int y, int *z) {
 
 int processOperation(int lastResult, RPCMessage* request, int* status) {
 	//check for request type
-	if (request.messageType == Request) {
+	if (request->messageType == Request) {
 		//bit and 0x80 for continuation
-		if (request.procedureId & CONT_OP)
-			request.arg1 = lastResult;
-		if (request.procedureId & ADD_OP)
-			status = add(request.arg1, request.arg2, &lastResult);
-		if (request.procedureId & SUB_OP)
-			status = subtract(request.arg1, request.arg2, &lastResult);
-		if (request.procedureId & MULT_OP)
-			status = multiply(request.arg1, request.arg2, &lastResult);
-		if (request.procedureId & DIV_OP)
-			status = divide(request.arg1, request.arg2, &lastResult);
-		if (request.procedureId & REM_OP)
-			status = rem(request.arg1, request.arg2, &lastResult);
+		if (request->procedureId & CONT_OP)
+			request->arg1 = lastResult;
+		if (request->procedureId & ADD_OP)
+			*status = add(request->arg1, request->arg2, &lastResult);
+		if (request->procedureId & SUB_OP)
+			*status = subtract(request->arg1, request->arg2, &lastResult);
+		if (request->procedureId & MULT_OP)
+			*status = multiply(request->arg1, request->arg2, &lastResult);
+		if (request->procedureId & DIV_OP)
+			*status = divide(request->arg1, request->arg2, &lastResult);
+		if (request->procedureId & REM_OP)
+			*status = rem(request->arg1, request->arg2, &lastResult);
 	}
 	return lastResult;
 }
