@@ -65,7 +65,7 @@ int processOperation(int lastResult, RPCMessage* request, int* status) {
 
 void processNetworkByteOrder(RPCMessage* request) {
 	//re-storing from network byte order to byte order
-	request.RPCId = ntohl(request.RPCId);
+	request->RPCId = ntohl(request->RPCId);
 	request->messageType = ntohl(request->messageType);
 	request->procedureId = ntohl(request->procedureId);
 	request->arg1 = ntohl(request->arg1);
