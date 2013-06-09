@@ -100,7 +100,7 @@ int blockUntilMsgRecv(int recvMsgSize, int sock, unsigned int cliAddrLen, RPCMes
 
 void localAddressInitBlock(unsigned short echoServPort, struct sockaddr_in* echoServAddr) {
 	/* Construct local address structure */
-	memset(&echoServAddr, 0, sizeof(echoServAddr));
+	memset(echoServAddr, 0, sizeof(struct sockaddr_in));
 	/* Zero out structure */
 	echoServAddr->sin_family = AF_INET;
 	echoServAddr->sin_addr.s_addr = htonl(INADDR_ANY);
